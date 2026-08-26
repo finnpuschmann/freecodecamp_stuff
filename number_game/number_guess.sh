@@ -1,5 +1,5 @@
 #!/bin/bash
-PSQL="psql --username=freecodecamp --dbname=number_game -t --no-align -c"
+PSQL="psql --username=freecodecamp --dbname=number_guess -t --no-align -c"
 
 RANDOM_NUMBER=$(( $RANDOM % 1000 + 1 ))
 #echo $RANDOM_NUMBER
@@ -18,25 +18,25 @@ then
   BEST_GAME=1000
 else # user exists
   # get number of games played and pb
-  HISTORY=$($PSQL "SELECT games_played, best_game FROM users WHERE username='$USERNAME';")
-  IFS='|' read -r GAMES_PLAYED BEST_GAME <<< "$HISTORY"
-  echo "Welcome back, $USERNAME! You have played $(( $GAMES_PLAYED )) games, and your best game took $(( $BEST_GAME )) guesses."
+  GAMES_PLAYED=$($PSQL "SELECT games_played FROM users WHERE username='$USERNAME';")
+  BEST_GAME=$($PSQL "SELECT best_game FROM users WHERE username='$USERNAME';")
+  echo "Welcome back, $USERNAME! You have played $GAMES_PLAYED games, and your best game took $BEST_GAME guesses."
 fi
 
 # regular expression for checking if number between 1-1000
 re='^([1-9][0-9]{0,2}|1000)$'
 NUM_GUESSES=0 # init guess counter
 
+# ask first time
+echo "Guess the secret number between 1 and 1000:"
 # loop until guessed correctly
 while true 
 do
-  echo "Guess the secret number between 1 and 1000:"
   read GUESS
-  
+  (( NUM_GUESSES++ )) # increase guess count
   # check validty of guess with reg-ex
   if [[ $GUESS =~ $re ]] # valid guess
   then
-    (( NUM_GUESSES++ )) # increase guess count
     if [[ $GUESS -eq $RANDOM_NUMBER ]] # correct guess
     then
       echo "You guessed it in $NUM_GUESSES tries. The secret number was $RANDOM_NUMBER. Nice job!"
